@@ -4,11 +4,12 @@ import { supabase } from "./supabase";
 export default function UserDashboard() {
   const [score, setScore] = useState("");
   const [scores, setScores] = useState([]);
-  const [drawResult, setDrawResult] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [charities, setCharities] = useState([]);
   const [selectedCharity, setSelectedCharity] = useState("");
+  const [userCharity, setUserCharity] = useState(null);
 
+  // 🔹 Get logged in user
   const getUser = async () => {
     const { data } = await supabase.auth.getUser();
     return data.user;
@@ -63,13 +64,14 @@ export default function UserDashboard() {
     const renewal = new Date();
     renewal.setMonth(renewal.getMonth() + 1);
 
-    await supabase.from("subscriptions").insert([
+    await supabase.from("subscriptions").upsert(
       {
         user_id: user.id,
         status: "active",
         renewal_date: renewal,
       },
-    ]);
+      { onConflict: ["user_id"] }
+    );
 
     fetchSubscription();
   };
@@ -80,10 +82,42 @@ export default function UserDashboard() {
     setCharities(data || []);
   };
 
+  // 🔹 Fetch user charity
+  const fetchUserCharity = async () => {
+    const user = await getUser();
+
+    const { data } = await supabase
+      .from("user_charity")
+      .select("*, charities(name)")
+      .eq("user_id", user.id)
+      .single();
+
+    setUserCharity(data);
+  };
+
+  // 🔹 Save charity (UPSERT ✅)
+  const saveCharity = async () => {
+    const user = await getUser();
+
+    await supabase.from("user_charity").upsert(
+      {
+        user_id: user.id,
+        charity_id: selectedCharity,
+        percentage: 10,
+      },
+      { onConflict: ["user_id"] }
+    );
+
+    alert("Charity saved");
+    fetchUserCharity();
+  };
+
+  // 🔹 Load everything
   useEffect(() => {
     fetchScores();
     fetchSubscription();
     fetchCharities();
+    fetchUserCharity();
   }, []);
 
   return (
@@ -91,14 +125,17 @@ export default function UserDashboard() {
       <h2>User Dashboard</h2>
 
       {/* Subscription */}
-      <div>
+      <div className="card">
         <h3>Subscription</h3>
-        {subscription ? (
-          <>
-            <p>Status: {subscription.status}</p>
-            <p>Renewal: {subscription.renewal_date}</p>
-          </>
-        ) : (
+        <p>Status: {subscription?.status || "inactive"}</p>
+        <p>
+          Renewal:{" "}
+          {subscription?.renewal_date
+            ? new Date(subscription.renewal_date).toLocaleDateString()
+            : "N/A"}
+        </p>
+
+        {subscription?.status !== "active" && (
           <button onClick={activateSubscription}>
             Activate Subscription
           </button>
@@ -106,8 +143,9 @@ export default function UserDashboard() {
       </div>
 
       {/* Charity */}
-      <div>
+      <div className="card">
         <h3>Charity</h3>
+
         <select onChange={(e) => setSelectedCharity(e.target.value)}>
           <option>Select Charity</option>
           {charities.map((c) => (
@@ -116,7 +154,18 @@ export default function UserDashboard() {
             </option>
           ))}
         </select>
+
+        <br /><br />
+
+        <button onClick={saveCharity}>Save</button>
+
         <p>Contribution: 10%</p>
+
+        {userCharity && (
+          <div style={{ marginTop: "10px" }}>
+            <strong>Selected:</strong> {userCharity.charities?.name}
+          </div>
+        )}
       </div>
 
       {/* Score */}

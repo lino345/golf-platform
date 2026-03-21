@@ -25,15 +25,31 @@ function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const signup = async () => {
-    const { error } = await supabase.auth.signUp({
+ const signup = async () => {
+  try {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (error) return alert(error.message);
+    if (error) throw error;
+
+    const user = data.user;
+
+    // 🔥 insert into users table
+    await supabase.from("users").insert([
+      {
+        id: user.id,
+        email: user.email,
+        role: "user",
+      },
+    ]);
+
     alert("Signup successful");
-  };
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({
