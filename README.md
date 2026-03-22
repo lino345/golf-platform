@@ -1,16 +1,117 @@
-# React + Vite
+⚡ Golf Impact Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack golf-based charity gaming platform where users submit scores, participate in draws, and contribute to charitable causes.
 
-Currently, two official plugins are available:
+**Live Links**
+Landing Page:
+https://golf-platform-sigma.vercel.app/
+User Dashboard:
+https://golf-platform-sigma.vercel.app/user
+Admin Dashboard:
+https://golf-platform-sigma.vercel.app/admin
+Demo Credentials:
+User Panel
+Email: user1@gmail.com  
+Password: 123456
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Admin Panel
+Email: admin1@gmail.com  
+Password: 123456
 
-## React Compiler
+Features
+**User Dashboard**
+✅ Authentication (Signup/Login via Supabase)
+✅ Subscription status (Active / Inactive)
+✅ Add golf scores (auto-maintains latest 5 scores)
+✅ View recent scores
+✅ Select and save charity
+✅ Participation in draw system
+**Draw System**
+✅ Random number generation (1–45)
+✅ Match-based winner selection
+✅ Prize pool calculation
+✅ Charity contribution deduction
+✅ Draw history tracking
+✅ Winner storage with payout status
+**Admin Dashboard**
+✅ View all users
+✅ View all scores
+✅ Run draw manually
+✅ View draw history
+✅ Basic analytics (users, scores, draws)
+**Public Pages**
+✅ Landing page with hero section
+✅ Charity exploration page
+✅ "How It Works" explanation page
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Expanding the ESLint configuration
+**Tech Stack**
+ Frontend 
+  React (Vite)
+  React Router
+  CSS (custom responsive UI)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+ Backend / Database
+  Supabase (PostgreSQL + Auth)
+
+ Deployment
+  Vercel
+  
+**Project Structure**
+src/
+│
+├── App.jsx
+├── main.jsx
+├── supabaseClient.js
+│
+├── LandingPage.jsx
+├── LoginPage.jsx
+├── UserDashboard.jsx
+├── AdminDashboard.jsx
+├── CharityPage.jsx
+├── HowItWorks.jsx
+│
+└── theme.css
+
+**Setup Instructions**
+1. Clone Repo
+git clone https://github.com/lino345/golf-platform.git
+cd golf-platform
+2. Install Dependencies
+npm install
+3. Add Environment Variables
+Create .env file:
+VITE_SUPABASE_URL=your_url
+VITE_SUPABASE_ANON_KEY=your_key
+4. Run Locally
+npm run dev
+
+Deployment: (Vercel)
+Framework: Vite
+Build Command: npm run build
+Output Directory: dist
+Required Fix for Routing: vercel.json
+
+
+**Future Improvements**
+Stripe subscription integration
+Automated monthly draw system
+Admin management panel (CRUD)
+Charity profiles & media
+Email notifications
+Role-based access security improvements 
+
+**Key Highlights**
+Clean role-based routing (User/Admin separation)
+Fully functional draw system with prize logic
+Mobile-responsive UI
+Real-time backend using Supabase
+Production-ready deployment on Vercel Author
+
+Built as part of a Product Engineering assignment.
+
+**Final Note**
+This project focuses on delivering a functional MVP aligned with the PRD, prioritizing:
+-Core logic (draw system, scoring)
+-Clean UI/UX
+-Scalable architecture
