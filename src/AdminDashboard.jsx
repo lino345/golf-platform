@@ -1,73 +1,33 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
+import "./theme.css";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [scores, setScores] = useState([]);
-  const [winners, setWinners] = useState([]);
+  const [draws, setDraws] = useState([]);
   const [drawResult, setDrawResult] = useState(null);
-  const [drawHistory, setDrawHistory] = useState([]);
-
-  // 🔹 Fetch Users
-  const fetchUsers = async () => {
-    const { data } = await supabase
-      .from("users")
-      .select(`
-        id,
-        email,
-        subscriptions(status, renewal_date),
-        user_charity(percentage, charities(name))
-      `);
-
-    setUsers(data || []);
-  };
-
-  // 🔹 Fetch Scores
-  const fetchScores = async () => {
-    const { data } = await supabase
-      .from("scores")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    setScores(data || []);
-  };
-
-  // 🔹 Fetch Winners
-  const fetchWinners = async () => {
-    const { data } = await supabase
-      .from("winners")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    setWinners(data || []);
-  };
-
-  // 🔹 Fetch Draw History
-  const fetchDrawHistory = async () => {
-    const { data } = await supabase
-      .from("draws")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    setDrawHistory(data || []);
-  };
-
-  const fetchData = async () => {
-    await fetchUsers();
-    await fetchScores();
-    await fetchWinners();
-    await fetchDrawHistory();
-  };
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // 🎯 Run Draw
+  const fetchData = async () => {
+    const { data: usersData } = await supabase.from("users").select("*");
+    const { data: scoresData } = await supabase.from("scores").select("*");
+    const { data: drawsData } = await supabase.from("draws").select("*");
+
+    setUsers(usersData || []);
+    setScores(scoresData || []);
+    setDraws(drawsData || []);
+  };
+
+  // 🎯 RUN DRAW (FIXED)
   const runDraw = async () => {
     const { data: allScores } = await supabase.from("scores").select("*");
-    const { data: users } = await supabase.from("users").select("*");
+    const { data: allUsers } = await supabase.from("users").select("*");
 
+    // 🎯 generate numbers
     const numbers = [];
     while (numbers.length < 5) {
       const n = Math.floor(Math.random() * 45) + 1;
@@ -75,29 +35,33 @@ export default function AdminDashboard() {
     }
 
     // 💰 Prize Logic
-    const totalPool = users.length * 100;
+    const totalPool = (allUsers?.length || 0) * 100;
     const charityAmount = Math.floor(totalPool * 0.1);
     const prizePool = totalPool - charityAmount;
 
+    // 🧠 Match logic
     const results = {};
-    const winnersList = [];
-
     allScores.forEach((s) => {
       if (!results[s.user_id]) results[s.user_id] = 0;
-      if (numbers.includes(s.score)) results[s.user_id]++;
-    });
-
-    Object.entries(results).forEach(([userId, matches]) => {
-      if (matches >= 2) {
-        winnersList.push({ user_id: userId, matches });
+      if (numbers.includes(s.score)) {
+        results[s.user_id]++;
       }
     });
 
-    let prizePerWinner = 0;
-    if (winnersList.length > 0) {
-      prizePerWinner = Math.floor(prizePool / winnersList.length);
-    }
+    // 🏆 Winners
+    const winnersList = Object.entries(results)
+      .filter(([_, matches]) => matches >= 2)
+      .map(([user_id, matches]) => ({
+        user_id,
+        matches,
+      }));
 
+    const prizePerWinner =
+      winnersList.length > 0
+        ? Math.floor(prizePool / winnersList.length)
+        : 0;
+
+    // 💾 Store draw
     const { data: drawData } = await supabase
       .from("draws")
       .insert([
@@ -112,6 +76,7 @@ export default function AdminDashboard() {
       .select()
       .single();
 
+    // 💾 Store winners
     if (winnersList.length > 0) {
       await supabase.from("winners").insert(
         winnersList.map((w) => ({
@@ -125,109 +90,85 @@ export default function AdminDashboard() {
 
     setDrawResult({
       numbers,
-      totalPool,
-      charityAmount,
       prizePool,
-      winners: winnersList,
-      prizePerWinner,
     });
 
     fetchData();
   };
 
-  // 💰 Mark Paid
-  const markPaid = async (id) => {
-    await supabase
-      .from("winners")
-      .update({ payout_status: "paid" })
-      .eq("id", id);
-
-    fetchWinners();
-  };
-
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Admin Dashboard</h2>
+    <div className="dashboard">
 
-      {/* 📊 Analytics */}
-      <div className="card">
-        <h3>Analytics</h3>
-        <p>Total Users: {users.length}</p>
-        <p>Total Scores: {scores.length}</p>
-        <p>Total Winners: {winners.length}</p>
+      {/* ANALYTICS */}
+      <div className="grid-4">
+        <div className="card glow">
+          <h3>Total Users</h3>
+          <h1>{users.length}</h1>
+        </div>
+
+        <div className="card glow">
+          <h3>Total Scores</h3>
+          <h1>{scores.length}</h1>
+        </div>
+
+        <div className="card glow">
+          <h3>Total Draws</h3>
+          <h1>{draws.length}</h1>
+        </div>
+
+        <div className="card glow">
+          <h3>Active Today</h3>
+          <h1>--</h1>
+        </div>
       </div>
 
-      {/* 👥 Users */}
-      <div className="card">
-        <h3>User Management</h3>
-        {users.map((u) => (
-          <div key={u.id}>
-            <strong>{u.email}</strong>
-            <p>Subscription: {u.subscriptions?.[0]?.status || "inactive"}</p>
-            <p>Charity: {u.user_charity?.[0]?.charities?.name || "None"}</p>
-          </div>
-        ))}
+      {/* USERS + SCORES */}
+      <div className="grid-2">
+        <div className="card">
+          <h3>Users</h3>
+          {users.map((u) => (
+            <div key={u.id} className="list-item">
+              {u.email}
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <h3>Scores</h3>
+          {scores.map((s) => (
+            <div key={s.id} className="list-item">
+              {s.user_id} → {s.score}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 🎯 Draw */}
-      <div className="card">
-        <h3>Draw Management</h3>
-        <button onClick={runDraw}>Run Draw</button>
+      {/* RUN DRAW */}
+      <div className="card highlight">
+        <h3>Run Draw</h3>
+
+        <button onClick={runDraw}>
+          🎯 Run Draw
+        </button>
 
         {drawResult && (
-          <div>
+          <div style={{ marginTop: "10px" }}>
             <p>Numbers: {drawResult.numbers.join(", ")}</p>
-            <p>Total Pool: ₹{drawResult.totalPool}</p>
-            <p>Charity: ₹{drawResult.charityAmount}</p>
             <p>Prize Pool: ₹{drawResult.prizePool}</p>
-
-            {drawResult.winners.length > 0 && (
-              <p>Prize per Winner: ₹{drawResult.prizePerWinner}</p>
-            )}
           </div>
         )}
       </div>
 
-      {/* 🏆 Winners */}
-      <div className="card">
-        <h3>Winners</h3>
-        {winners.map((w) => (
-          <div key={w.id}>
-            <p>User: {w.user_id}</p>
-            <p>Matches: {w.matches}</p>
-            <p>Status: {w.payout_status}</p>
-            <p>Prize: ₹{w.prize_amount}</p>
-
-            {w.payout_status !== "paid" && (
-              <button onClick={() => markPaid(w.id)}>
-                Mark Paid
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* 📜 Draw History */}
+      {/* DRAW HISTORY */}
       <div className="card">
         <h3>Draw History</h3>
-        {drawHistory.map((d) => (
-          <div key={d.id}>
-            <p>Numbers: {d.numbers?.join(", ")}</p>
-            <p>Date: {new Date(d.created_at).toLocaleString()}</p>
-            <p>Pool: ₹{d.prize_pool}</p>
+        {draws.map((d) => (
+          <div key={d.id} className="list-item">
+            🎯 {d.numbers?.join(", ")}
           </div>
         ))}
       </div>
 
-      {/* 📊 All Scores */}
-      <div className="card">
-        <h3>All Scores</h3>
-        {scores.map((s) => (
-          <div key={s.id}>
-            User: {s.user_id} → {s.score}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

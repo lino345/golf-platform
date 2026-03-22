@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { supabase } from "./supabase";
+import { supabase } from "./supabaseClient";
+import "./theme.css";
 
 export default function UserDashboard() {
   const [score, setScore] = useState("");
@@ -31,6 +32,8 @@ export default function UserDashboard() {
 
   // 🔹 Add score
   const addScore = async () => {
+    if (!score) return alert("Enter a score");
+
     const user = await getUser();
 
     await supabase.from("scores").insert([
@@ -64,14 +67,13 @@ export default function UserDashboard() {
     const renewal = new Date();
     renewal.setMonth(renewal.getMonth() + 1);
 
-    await supabase.from("subscriptions").upsert(
+    await supabase.from("subscriptions").upsert([
       {
         user_id: user.id,
         status: "active",
         renewal_date: renewal,
       },
-      { onConflict: ["user_id"] }
-    );
+    ]);
 
     fetchSubscription();
   };
@@ -82,7 +84,7 @@ export default function UserDashboard() {
     setCharities(data || []);
   };
 
-  // 🔹 Fetch user charity
+  // 🔹 Fetch user's selected charity
   const fetchUserCharity = async () => {
     const user = await getUser();
 
@@ -95,24 +97,25 @@ export default function UserDashboard() {
     setUserCharity(data);
   };
 
-  // 🔹 Save charity (UPSERT ✅)
+  // 🔹 Save charity
   const saveCharity = async () => {
+    if (!selectedCharity) return alert("Select a charity");
+
     const user = await getUser();
 
-    await supabase.from("user_charity").upsert(
+    await supabase.from("user_charity").upsert([
       {
         user_id: user.id,
         charity_id: selectedCharity,
         percentage: 10,
       },
-      { onConflict: ["user_id"] }
-    );
+    ]);
 
     alert("Charity saved");
     fetchUserCharity();
   };
 
-  // 🔹 Load everything
+  // 🔹 Load all data
   useEffect(() => {
     fetchScores();
     fetchSubscription();
@@ -121,12 +124,12 @@ export default function UserDashboard() {
   }, []);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>User Dashboard</h2>
+    <div className="dashboard">
 
-      {/* Subscription */}
-      <div className="card">
+      {/* ⚡ SUBSCRIPTION */}
+      <div className="card glow">
         <h3>Subscription</h3>
+
         <p>Status: {subscription?.status || "inactive"}</p>
         <p>
           Renewal:{" "}
@@ -137,17 +140,20 @@ export default function UserDashboard() {
 
         {subscription?.status !== "active" && (
           <button onClick={activateSubscription}>
-            Activate Subscription
+            Activate Subscription ⚡
           </button>
         )}
       </div>
 
-      {/* Charity */}
+      {/* ❤️ CHARITY */}
       <div className="card">
         <h3>Charity</h3>
 
-        <select onChange={(e) => setSelectedCharity(e.target.value)}>
-          <option>Select Charity</option>
+        <select
+          value={selectedCharity}
+          onChange={(e) => setSelectedCharity(e.target.value)}
+        >
+          <option value="">Select Charity</option>
           {charities.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -162,38 +168,47 @@ export default function UserDashboard() {
         <p>Contribution: 10%</p>
 
         {userCharity && (
-          <div style={{ marginTop: "10px" }}>
-            <strong>Selected:</strong> {userCharity.charities?.name}
-          </div>
+          <p>
+            Selected: <strong>{userCharity.charities?.name}</strong>
+          </p>
         )}
       </div>
 
-      {/* Score */}
-      <div>
+      {/* 🎯 ADD SCORE */}
+      <div className="card highlight">
         <h3>Add Score</h3>
+
         <input
           value={score}
           onChange={(e) => setScore(e.target.value)}
+          placeholder="Enter score"
         />
+
         <button onClick={addScore}>Add</button>
       </div>
 
-      {/* Scores */}
-      <div>
+      {/* 📊 SCORES */}
+      <div className="card">
         <h3>Last 5 Scores</h3>
-        <ul>
-          {scores.map((s) => (
-            <li key={s.id}>{s.score}</li>
-          ))}
-        </ul>
+
+        {scores.length === 0 ? (
+          <p>No scores yet</p>
+        ) : (
+          scores.map((s) => (
+            <div key={s.id} className="list-item">
+              {s.score}
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Participation */}
-      <div>
+      {/* 📈 PARTICIPATION */}
+      <div className="card glow">
         <h3>Participation</h3>
         <p>Draws Entered: {scores.length}</p>
         <p>Next Draw: Sunday 6PM</p>
       </div>
+
     </div>
   );
 }
