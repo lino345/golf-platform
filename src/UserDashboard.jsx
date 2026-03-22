@@ -16,10 +16,78 @@ export default function UserDashboard() {
     return data.user;
   };
 
-  // 🔹 Fetch scores
-  const fetchScores = async () => {
-    const user = await getUser();
+  // 🔹 Load ALL data
+  useEffect(() => {
+    const loadData = async () => {
+      const user = await getUser();
+      if (!user) return;
 
+      // Scores
+      const { data: scoresData } = await supabase
+        .from("scores")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      setScores(scoresData || []);
+
+      // Subscription
+      const { data: subData } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      setSubscription(subData);
+
+      // Charities
+      const { data: charityData } = await supabase
+        .from("charities")
+        .select("*");
+
+      setCharities(charityData || []);
+
+      // User Charity
+      const { data: userCharityData } = await supabase
+        .from("user_charity")
+        .select("*, charities(name)")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      setUserCharity(userCharityData);
+    };
+
+    loadData();
+  }, []);
+
+  // 🔹 Add score (max 5 logic)
+  const addScore = async () => {
+    if (!score) return alert("Enter a score");
+
+    const user = await getUser();
+    if (!user) return;
+
+    const { data: existing } = await supabase
+      .from("scores")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (existing?.length >= 5) {
+      await supabase.from("scores").delete().eq("id", existing[0].id);
+    }
+
+    await supabase.from("scores").insert([
+      {
+        user_id: user.id,
+        score: Number(score),
+      },
+    ]);
+
+    setScore("");
+
+    // refresh scores
     const { data } = await supabase
       .from("scores")
       .select("*")
@@ -30,39 +98,10 @@ export default function UserDashboard() {
     setScores(data || []);
   };
 
-  // 🔹 Add score
-  const addScore = async () => {
-    if (!score) return alert("Enter a score");
-
-    const user = await getUser();
-
-    await supabase.from("scores").insert([
-      {
-        user_id: user.id,
-        score: Number(score),
-      },
-    ]);
-
-    setScore("");
-    fetchScores();
-  };
-
-  // 🔹 Fetch subscription
-  const fetchSubscription = async () => {
-    const user = await getUser();
-
-    const { data } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    setSubscription(data);
-  };
-
   // 🔹 Activate subscription
   const activateSubscription = async () => {
     const user = await getUser();
+    if (!user) return;
 
     const renewal = new Date();
     renewal.setMonth(renewal.getMonth() + 1);
@@ -75,26 +114,7 @@ export default function UserDashboard() {
       },
     ]);
 
-    fetchSubscription();
-  };
-
-  // 🔹 Fetch charities
-  const fetchCharities = async () => {
-    const { data } = await supabase.from("charities").select("*");
-    setCharities(data || []);
-  };
-
-  // 🔹 Fetch user's selected charity
-  const fetchUserCharity = async () => {
-    const user = await getUser();
-
-    const { data } = await supabase
-      .from("user_charity")
-      .select("*, charities(name)")
-      .eq("user_id", user.id)
-      .single();
-
-    setUserCharity(data);
+    setSubscription({ status: "active" });
   };
 
   // 🔹 Save charity
@@ -102,6 +122,7 @@ export default function UserDashboard() {
     if (!selectedCharity) return alert("Select a charity");
 
     const user = await getUser();
+    if (!user) return;
 
     await supabase.from("user_charity").upsert([
       {
@@ -112,103 +133,114 @@ export default function UserDashboard() {
     ]);
 
     alert("Charity saved");
-    fetchUserCharity();
-  };
 
-  // 🔹 Load all data
-  useEffect(() => {
-    fetchScores();
-    fetchSubscription();
-    fetchCharities();
-    fetchUserCharity();
-  }, []);
+    const { data } = await supabase
+      .from("user_charity")
+      .select("*, charities(name)")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    setUserCharity(data);
+  };
 
   return (
     <div className="dashboard">
 
-      {/* ⚡ SUBSCRIPTION */}
-      <div className="card glow">
-        <h3>Subscription</h3>
-
-        <p>Status: {subscription?.status || "inactive"}</p>
-        <p>
-          Renewal:{" "}
-          {subscription?.renewal_date
-            ? new Date(subscription.renewal_date).toLocaleDateString()
-            : "N/A"}
-        </p>
-
-        {subscription?.status !== "active" && (
-          <button onClick={activateSubscription}>
-            Activate Subscription ⚡
-          </button>
-        )}
+      {/* HEADER */}
+      <div className="topbar">
+        <h1>⚡ Golf Impact</h1>
       </div>
 
-      {/* ❤️ CHARITY */}
-      <div className="card">
-        <h3>Charity</h3>
+      {/* GRID */}
+      <div className="dashboard-grid">
 
-        <select
-          value={selectedCharity}
-          onChange={(e) => setSelectedCharity(e.target.value)}
-        >
-          <option value="">Select Charity</option>
-          {charities.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        {/* HERO */}
+        <div className="card hero">
+          <p className="live">🔴 Live</p>
+          <h2>Welcome Back</h2>
+          <p>Track scores & win rewards</p>
+        </div>
 
-        <br /><br />
-
-        <button onClick={saveCharity}>Save</button>
-
-        <p>Contribution: 10%</p>
-
-        {userCharity && (
+        {/* SUBSCRIPTION */}
+        <div className="card gradient">
+          <h3>Subscription</h3>
           <p>
-            Selected: <strong>{userCharity.charities?.name}</strong>
+            {subscription?.status === "active"
+              ? "Active ✅"
+              : "Inactive ❌"}
           </p>
-        )}
+
+          {subscription?.status !== "active" && (
+            <button onClick={activateSubscription}>
+              Activate
+            </button>
+          )}
+        </div>
+
+        {/* STATS */}
+        <div className="card">
+          <h3>Your Stats</h3>
+          <p>Scores: {scores.length}</p>
+        </div>
+
+        {/* ADD SCORE */}
+        <div className="card half">
+          <h3>Add Score</h3>
+
+          <input
+            type="number"   // ✅ mobile keyboard fix
+            placeholder="Enter score"
+            value={score}
+            onChange={(e) => setScore(e.target.value)}
+          />
+
+          <button onClick={addScore}>Add Score</button>
+        </div>
+
+        {/* RECENT SCORES */}
+        <div className="card half">
+          <h3>Recent Scores</h3>
+
+          {scores.length === 0 ? (
+            <p>No scores yet</p>
+          ) : (
+            scores.map((s) => (
+              <div key={s.id} className="list-item">
+                Score: {s.score}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* CHARITY (BOTTOM FULL WIDTH) */}
+        <div className="card full">
+          <h3>❤️ Charity</h3>
+
+          <p className="selected-charity">
+            Selected:{" "}
+            <strong>
+              {userCharity?.charities?.name || "Not selected"}
+            </strong>
+          </p>
+
+          <div className="charity-actions">
+            <select
+              value={selectedCharity}
+              onChange={(e) => setSelectedCharity(e.target.value)}
+            >
+              <option value="">Select charity</option>
+              {charities.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <button onClick={saveCharity}>Save</button>
+          </div>
+        </div>
+
       </div>
-
-      {/* 🎯 ADD SCORE */}
-      <div className="card highlight">
-        <h3>Add Score</h3>
-
-        <input
-          value={score}
-          onChange={(e) => setScore(e.target.value)}
-          placeholder="Enter score"
-        />
-
-        <button onClick={addScore}>Add</button>
-      </div>
-
-      {/* 📊 SCORES */}
-      <div className="card">
-        <h3>Last 5 Scores</h3>
-
-        {scores.length === 0 ? (
-          <p>No scores yet</p>
-        ) : (
-          scores.map((s) => (
-            <div key={s.id} className="list-item">
-              {s.score}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* 📈 PARTICIPATION */}
-      <div className="card glow">
-        <h3>Participation</h3>
-        <p>Draws Entered: {scores.length}</p>
-        <p>Next Draw: Sunday 6PM</p>
-      </div>
-
     </div>
   );
 }

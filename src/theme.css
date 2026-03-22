@@ -1,206 +1,301 @@
-/* 🌌 Electric Fairway Theme */
-/* 🔥 Full screen background */
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background: #1f2937;
-  border: none;
-  border-radius: 6px;
-  color: white;
-}
-
-button {
-  margin-top: 10px;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  background: #00f5d4;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  box-shadow: 0 0 10px #00f5d4;
-}
-.dashboard {
-  padding: 20px;
-  color: white;
-}
-
-/* GRID SYSTEM */
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-/* CARD STYLE */
-.card {
-  background: #111827;
-  padding: 20px;
-  border-radius: 12px;
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-}
-
-/* GLOW EFFECT */
-.glow {
-  box-shadow: 0 0 20px rgba(0, 245, 212, 0.3);
-}
-
-/* HIGHLIGHT CARD */
-.highlight {
-  background: linear-gradient(135deg, #00f5d4, #00bbf9);
-  color: black;
-}
-
-/* LIST ITEMS */
-.list-item {
-  padding: 10px;
-  border-bottom: 1px solid #333;
-}
-.login-page {
-  height: 100vh;
-  width: 100%;
-  background: url("./assets/bg.jpg") no-repeat center;
-  display:block;
-  align-items: center;
-  justify-content: center;
-}
-
-/* dark overlay for readability */
-.login-overlay {
-  width: 100%;
-  height: 100%;
-  background: rgba(5, 10, 25, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* login card */
-.login-box {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #00f5d4;
-  padding: 40px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  text-align: center;
-  box-shadow: 0 0 30px #00f5d4;
-}
-
-/* inputs */
-.login-box input {
-  display: block;
-  width: 250px;
-  margin: 10px auto;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  outline: none;
-}
-
-/* buttons */
-.login-box button {
-  padding: 10px 20px;
-  border: none;
-  background: #00f5d4;
-  color: black;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.login-box button:hover {
-  box-shadow: 0 0 15px #00f5d4;
-  transform: scale(1.05);
-}
-
-/* title glow */
-.login-box h1 {
-  color: #00f5d4;
-  text-shadow: 0 0 20px #00f5d4;
-}
-body {
+/* =========================
+   🌍 GLOBAL RESET
+========================= */
+* {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
-  background: #0B0F1A;
-  color: #EAEAEA;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-/* Layout */
-.container {
-  padding: 20px;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Lato', sans-serif;
 }
 
-/* 🟦 Cards */
-.card {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 20px;
+body {
+  background: #0f172a; /* warmer dark */
+  color: #e5e7eb;
+}
+
+/* =========================
+   🧱 DASHBOARD LAYOUT
+========================= */
+.dashboard {
+  padding: 16px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* =========================
+   🔝 TOPBAR
+========================= */
+.topbar {
   margin-bottom: 20px;
-  backdrop-filter: blur(12px);
+}
+
+.topbar h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #22c55e;
+}
+
+/* =========================
+   📦 GRID (MOBILE FIRST)
+========================= */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* mobile default */
+  gap: 16px;
+}
+
+/* =========================
+   🟦 CARD
+========================= */
+.card {
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 14px;
+  padding: 16px;
   border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 0 15px rgba(0, 245, 212, 0.15);
-  transition: 0.3s;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  transition: 0.25s ease;
 }
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 0 25px rgba(0, 245, 212, 0.4);
+  box-shadow: 0 0 20px rgba(34,197,94,0.3);
 }
 
-/* ⚡ Buttons */
-button {
-  background: linear-gradient(90deg, #00F5D4, #7B2CBF);
+/* =========================
+   🎯 HERO
+========================= */
+.hero {
+  background: url("./assets/bg.jpg") no-repeat center;
+  background-size: cover;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+}
+
+.hero * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero h2 {
+  font-size: 1.3rem;
+}
+
+/* =========================
+   🌈 GRADIENT CARD
+========================= */
+.gradient {
+  background: linear-gradient(135deg, #22c55e, #6366f1);
   color: white;
+}
+
+/* =========================
+   ✍ INPUTS + BUTTONS
+========================= */
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #111827;
+  color: white;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
   border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
+  background: linear-gradient(90deg, #22c55e, #6366f1);
+  color: white;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 0 10px #00F5D4;
   transition: 0.3s;
 }
 
 button:hover {
-  box-shadow: 0 0 20px #00F5D4;
-  transform: scale(1.05);
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(34,197,94,0.5);
 }
 
-/* ✍ Inputs */
-input, select {
-  background: #111827;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 10px;
-  border-radius: 8px;
+/* =========================
+   📋 LIST
+========================= */
+.list-item {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* =========================
+   ❤️ CHARITY
+========================= */
+.charity-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.selected-charity {
+  margin-bottom: 10px;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   📱 TABLET (≥600px)
+========================= */
+@media (min-width: 600px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero {
+    grid-column: span 2;
+  }
+
+  .full {
+    grid-column: span 2;
+  }
+}
+
+/* =========================
+   💻 DESKTOP (≥1024px)
+========================= */
+@media (min-width: 1024px) {
+  .dashboard {
+    padding: 24px;
+  }
+
+  .topbar h1 {
+    font-size: 2rem;
+  }
+
+  /* Keep add score + recent side-by-side */
+  .half {
+    grid-column: span 1;
+  }
+
+  .full {
+    grid-column: span 2;
+  }
+}
+/* =========================
+   🌌 LANDING PAGE (FIXED)
+========================= */
+.landing {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
   color: white;
-  outline: none;
+
+  background: url("./assets/bg.jpg") no-repeat center center;
+  background-size: cover;
+
+  position: relative;
+  padding: 20px;
 }
 
-/* ✨ Headings */
-h2, h3 {
-  color: #00F5D4;
-  text-shadow: 0 0 8px rgba(0,245,212,0.5);
+/* Overlay */
+.landing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 26, 0.75); /* softer dark */
+}
+
+/* Keep content above overlay */
+.landing > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Heading */
+.landing h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+/* Subtitle */
+.landing p {
+  max-width: 600px;
+  margin: 10px auto;
+  color: #d1d5db;
+}
+
+/* Fix stretched buttons ONLY on landing */
+.landing button {
+  width: auto;
+  min-width: 220px;
+  padding: 12px 24px;
+}
+/* =========================
+   🌌 LANDING PAGE (FIXED)
+========================= */
+.landing {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+  color: white;
+
+  background: url("./assets/bg.jpg") no-repeat center center;
+  background-size: cover;
+
+  position: relative;
+  padding: 20px;
+}
+
+/* Overlay */
+.landing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 26, 0.75); /* softer dark */
+}
+
+/* Keep content above overlay */
+.landing > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Heading */
+.landing h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+/* Subtitle */
+.landing p {
+  max-width: 600px;
+  margin: 10px auto;
+  color: #d1d5db;
+}
+
+/* Fix stretched buttons ONLY on landing */
+.landing button {
+  width: auto;
+  min-width: 220px;
+  padding: 12px 24px;
 }
